@@ -1,0 +1,81 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+{% if user.is_authenticated %}
+    <form action="{% url 'post' %}" method="post">
+        {% csrf_token %}
+        <textarea name="content" rows="4" cols="50" placeholder="What's on your mind?"></textarea><br>
+        <input type="submit" value="Post">
+    </form>
+{% else %}
+    <p>Please log in to post.</p>
+{% endif %}
+
+{% for post in posts %}
+    <div class="post" id="{{post.id}}">
+        <p>Author: <a href="{% url 'profile' post.author.id %}">{{ post.author.username }}</a></p>
+        <p>{{ post.timestamp }}</p>
+        <form action="{% url 'follow' post.author.id %}" method="post">
+            {% csrf_token %}
+            <button type="submit">
+                {% if post.author.is_followed %}
+                    Unfollow
+                {% else %}
+                    Follow
+                {% endif %}
+            </button>
+            <p>{{ post.author.username }} has {{ post.author.followers.count }} followers.</p>
+        </form>
+        <p class="post-content">
+    <a href="{% url 'post_detail' post.id %}">
+        {{ post.content }}
+    </a>
+</p>
+    
+    {% if user.is_authenticated %}
+<div class="post-actions">
+        <form action="{% url 'like' post.id %}" method="post">
+            {% csrf_token %}
+            <button type="button" class="like-button">
+                {% if post.is_liked %}
+                Unlike
+                {%else%}
+                Like
+                {%endif%}
+
+            </button>
+ 
+        </form>
+        <p class="like-count">{{ post.likes.count }} likes</p>
+         <form class="comment-form" action="{% url 'comment' post.id %}" method="post">
+        {% csrf_token %}
+        <textarea name="content" rows="2" cols="50" placeholder="Add a comment..."></textarea><br>
+        <input type="submit" value="Submit">
+    </form>
+</div>
+{% else %}
+    <p>Please log in to comment.</p>
+{% endif %}
+
+</div>
+{% empty %}
+    <p>No posts yet.</p>
+{% endfor %}
+{% if page_obj.has_other_pages %}
+    <div class="pagination">
+        <span class="page-links">
+            {% if page_obj.has_previous %}
+                <a href="?page=1">&laquo; first</a>
+                <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+            {% endif %}
+            <span class="current">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
+{% endif %}
+{% endblock %}
